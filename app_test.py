@@ -7,6 +7,14 @@ def get_db():
 @app.route("/")
 def home():
     db=get_db()
+    user_id=session.get("user_id")
+    liked_posts=[]
+    if user_id:
+        liked_posts=db.execute(
+            "SELECT post_id FROM likes WHERE user_id=?",
+            (user_id,)
+            ).fetchall()
+    liked_posts=[lp[0] for lp in liked_posts]
     posts=db.execute("""
     SELECT posts.id,posts.content,posts.created_at,users.username,posts.user_id,posts.likes
     FROM posts
@@ -14,7 +22,7 @@ def home():
     ORDER BY posts.created_at DESC
     """).fetchall()
     db.close()
-    return render_template("index.html",posts=posts)
+    return render_template("index.html",posts=posts,liked_posts=liked_posts)
 @app.route("/delete/<int:post_id>",methods=["POST"])
 def delete(post_id):
     db=get_db()

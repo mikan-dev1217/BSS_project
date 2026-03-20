@@ -87,7 +87,9 @@
 <button type="submit" style="background-color: #666; font-size: 0.8em; padding: 5px 10px;">削除</button>
 </form>
 <form action="/like/{{ p[0] }}" method="post" style="display:inline;">
-<button type="submit">👍{{ p[5] }}</button></form>
+<button type="submit"
+    style="background-color: {% if p[0] in liked_posts %}red{% else %}#1a73e8{% endif %};">
+    👍{{ p[5] }}</button>
 </form>
 </div>
 </li>
