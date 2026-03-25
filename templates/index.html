@@ -46,7 +46,7 @@
         margin-bottom: 15px;
         list-style: none;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        display:flex;
+        display:block;
         justify-content:space-between;
         align-items:center;
     }
@@ -60,6 +60,22 @@
     }
     button:hover {
         background-color: #1557b0;
+    }
+    .comments {
+    position: relative;
+    border-top: 1px solid #ddd;
+    margin-top: 15px;
+    padding-top: 15px;
+    }
+
+    .comment-label {
+    position: absolute;
+    right: 10px;
+    top: -10px;
+    background: #f8f9fa;
+    font-size: 0.8em;
+    color: #555;
+    padding: 0 5px;
     }
 </style>
 <title>Echo</title>
@@ -77,27 +93,63 @@
 <div class="list-container">
 <ul>
 {% for p in posts %}
-<li>
-<div>
-<div style="color: gray; font-size: 0.8em; margin-bottom: 5px;">投稿時間: {{ p[2] }}</div>
-<strong>{{p[3]}}</strong>:{{ p[1] }}
-</div>
-<div>
-<form action="/delete/{{ p[0] }}" method="post" style="display:inline;">
-<button type="submit" style="background-color: #666; font-size: 0.8em; padding: 5px 10px;">削除</button>
-</form>
-<form action="/like/{{ p[0] }}" method="post" style="display:inline;">
-<button type="submit"
-    style="background-color: {% if p[0] in liked_posts %}red{% else %}#1a73e8{% endif %};">
-    👍{{ p[5] }}</button>
-</form>
-</div>
+<li style="display:block; padding: 15px; border: 1px solid #eee; margin-bottom: 10px;">
+    <div>
+        <div style="color: gray; font-size: 0.8em; margin-bottom: 5px;">
+            投稿時間: {{ p["created_at"] }}
+        </div>
+        <a href="/user/{{p['user_id']}}">
+            <strong>{{p["username"]}}</strong>
+        </a>: {{ p["content"] }}    
+    </div>
+
+    <div class="comments">
+        <span class="comment-label">コメント</span>
+        {% for c in comments %}
+            {% if c["post_id"] == p["id"] %}
+                <div class="comment" style="font-size: 0.9em; margin-left: 10px;">
+                    <a href="/user/{{c['id']}}">
+                        <strong>{{c["username"]}}</strong>
+                    </a>: {{ c["content"] }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div style="margin-top:10px;">
+        <form action="/comment/{{p['id']}}" method="post" style="display:inline;">
+            <input type="text" name="content" placeholder="コメント" style="width:50%;" required>
+            <button type="submit" style="padding: 5px 10px; background-color: #1557b0;">送信</button>
+        </form>
+
+        <div style="margin-top:10px; text-align: right;">
+            {% if session["user_id"] == p["user_id"] %}
+            <form action="/delete/{{ p['id'] }}" method="post" style="display:inline;">
+                <button type="submit" style="background-color: #666; font-size: 0.8em; padding: 5px 10px;">削除</button>
+            </form>
+            {% endif %}
+
+            <form action="/like/{{ p['id'] }}" method="post" style="display:inline;">
+                <button type="submit"
+                    style="background-color: {% if p['id'] in liked_posts %}red{% else %}#1a73e8{% endif %};">
+                    👍{{ p["likes"] }}
+                </button>
+            </form>
+        </div>
+    </div>
 </li>
 {% endfor %}
 </ul>
+
 <hr>
-<a href="/login">ログイン</a>
-<a href="/register">登録</a>
+{% if "user_id" not in session %}
+    <a href="/login">ログイン</a>
+    <a href="/register">登録</a>
+{% else %}
+    <form action="/logout" method="post">
+        <button type="submit" style="background-color: #dc3545;">ログアウト</button>
+    </form>
+{% endif %}
 <footer style="color: gray; font-size: 0.9em;">
 producer: wataru shiraishi
 </footer>

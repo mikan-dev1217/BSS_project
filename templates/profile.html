@@ -1,0 +1,19 @@
+<title>{{user["username"]}}</title>
+<h1>{{user["username"]}}のプロフィール</h1>
+<hr>
+<form action="/follow/{{user['id']}}"method="post">
+    <button type="submit">フォロー</button>
+</form>
+<hr>
+<ul>
+    {% for p in posts %}
+    <li>
+        {{p["content"]}}:{{p["created_at"]}}
+    </li>
+    {%endfor%}
+<hr>
+{%if session["user_id"]==user_id%}
+    <a href="/edit_profile">編集</a>
+{%endif%}
+<a href="/">戻る</a>
+</ul>
