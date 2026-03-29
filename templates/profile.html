@@ -67,16 +67,27 @@
 </head>
 <body>
 <h1>{{user["username"]}}のプロフィール</h1>
+<div style="display:flex; gap:40px; text-align:center; margin:0 auto; width:fit-content;">    <div>
+        <div><strong>{{following}}</strong></div>
+        <div>フォロー中</div>
+    </div>
+    <div>
+        <div><strong>{{followers}}</strong></div>
+        <div>フォロワー</div>
+    </div>
+</div>
 <hr>
 <div class="button-location">
-{% if is_following %}
-    <form action="/unfollow/{{user['id']}}"method="post">
-        <button type="submit"style="background-color: red;">フォロー解除</button>
-    </form>
-{% else %}
-    <form action="/follow/{{user['id']}}"method="post">
-        <button type="submit">フォロー</button>
-    </form>
+{% if session["user_id"] != user_id %}
+    {% if is_following %}
+        <form action="/unfollow/{{user['id']}}"method="post">
+            <button type="submit"style="background-color: red;">フォロー解除</button>
+        </form>
+    {% else %}
+        <form action="/follow/{{user['id']}}"method="post">
+            <button type="submit">フォロー</button>
+        </form>
+    {% endif %}
 {% endif %}
 {% if session["user_id"]!= user_id %}
     <a href="/messages/{{user['id']}}"class="dm-button">DM</a>

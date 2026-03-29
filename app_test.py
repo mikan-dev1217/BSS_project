@@ -123,6 +123,10 @@ def talking(user_id):
         return redirect("/register")
     sender_id=session["user_id"]
     db=get_db()
+    partner=db.execute(
+        "SELECT username FROM users WHERE id=?",
+        (user_id,)
+    ).fetchone()
     messages=db.execute("""
         SELECT messages.content,messages.created_at,messages.sender_id,messages.receiver_id,
         users.username
@@ -137,7 +141,7 @@ def talking(user_id):
     )
     db.commit()
     db.close()
-    return render_template("talking.html",messages=messages,user_id=user_id)
+    return render_template("talking.html",partner=partner,messages=messages,user_id=user_id)
 @app.route("/login",methods=["GET","POST"])
 def login():
     if request.method=="POST":
@@ -222,6 +226,14 @@ def unfollow(user_id):
 @app.route("/user/<int:user_id>")
 def profile(user_id):
     db = get_db()
+    followers=db.execute(
+        "SELECT COUNT(*) FROM follows WHERE following_id=?",
+        (user_id,)
+    ).fetchone()[0]
+    following=db.execute(
+        "SELECT COUNT(*) FROM follows WHERE follow_id=?",
+        (user_id,)
+    ).fetchone()[0]
     user = db.execute(
         "SELECT id,username FROM users WHERE id=?", 
         (user_id,)
@@ -235,7 +247,7 @@ def profile(user_id):
         (session.get("user_id"),user_id)
     ).fetchone()
     db.close()
-    return render_template("profile.html",is_following=is_following, user=user, posts=posts,user_id=user_id)
+    return render_template("profile.html",followers=followers,following=following,is_following=is_following, user=user, posts=posts,user_id=user_id)
 @app.route("/edit_profile",methods=["GET","POST"])
 def edit_profile():
     if "user_id" not in session:
