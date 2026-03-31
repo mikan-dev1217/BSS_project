@@ -28,6 +28,7 @@ def home():
         "UPDATE notices SET is_read=1 WHERE user_id=?",
         (user_id,)
     )
+    db.commit()
     posts=db.execute("""
     SELECT posts.id,posts.content,posts.created_at,users.username,posts.user_id,posts.likes
     FROM posts

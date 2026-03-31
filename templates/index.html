@@ -67,7 +67,19 @@
     margin-top: 15px;
     padding-top: 15px;
     }
-
+    .menu-link{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:15px 20px;
+    font-size:1.1em;
+    color:#333;
+    text-decoration:none;
+    border-radius:30px;
+    }
+    .menu-link:hover{
+    background-color: #f0f0f0;
+    }
     .comment-label {
     position: absolute;
     right: 10px;
@@ -81,9 +93,9 @@
 <title>Echo</title>
 </head>
 <body>
-<div class="header-section"style="z-index:200;position:relative;">
+<div class="header-section"style="z-index:100;position:relative;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <button onclick="toggleMenu()" style="background:none;color:#444;font-size:1.5em;width:auto;">☰</button><h1>Echo</h1>
+        <button onclick="toggleMenu()" style="background:none;color:#444;font-size:1.5em;width:auto;"><strong>☰</strong></button><h1>Echo</h1>
         {% if "user_id" not in session %}
             <div>
                 <a href="/login">ログイン</a>
@@ -101,10 +113,11 @@
     <button type="submit">投稿</button>
 </form>
 </div>
-<div id="menu" style="z-index:100;position:fixed;left:-250px;top:0;width:250px;height:100%;background:white;transition:left 0.3s;">
-    <a href="/topic/bukatsu"style="display:block;padding:10px;">部活</a>
-    <a href="/topic/study"style="display:block;padding:10px;">勉強</a>
-    <a href="/topic/zatsudan"style="display:block;padding:10px;">雑談</a>
+<div id="menu" style="box-shadow: 2px 0 5px rgba(0,0,0,0.3);z-index:200;position:fixed;left:-250px;top:0;width:250px;height:100%;background:#e4dce8;transition:left 0.3s;">
+    <h2>トピック一覧</h2>
+    <a href="/topic/bukatsu"class="menu-link"style="display:block;padding:10px;">部活</a>
+    <a href="/topic/study"class="menu-link"style="display:block;padding:10px;">勉強</a>
+    <a href="/topic/zatsudan"class="menu-link"style="display:block;padding:10px;">雑談</a>
 </div>
 <div class="main-content">
 <div class="list-container">
@@ -220,6 +233,13 @@ producer: wataru shiraishi
         menu.style.left="-250px"
     }
     }
+    document.addEventListener("click",function(e){
+        const menu=document.getElementById("menu")
+        const button=document.querySelector("[onclick='toggleMenu()']")
+        if(!menu.contains(e.target) && !button.contains(e.target)){
+            menu.style.left="-250px"
+        }
+    })
 </script>
 </body>
 </html>
