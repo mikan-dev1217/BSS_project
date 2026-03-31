@@ -53,6 +53,17 @@ CREATE TABLE IF NOT EXISTS messages(
     created_at TIMESTAMP DEFAULT (DATETIME('now','localtime'))
 )
 """)
+db.execute("""
+CREATE TABLE IF NOT EXISTS notices(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    type TEXT,
+    post_id INTEGER,
+    from_user_id INTEGER,
+    is_read INTEGER DEFAULT 0,
+    created_At TIMESTAMP DEFAULT (DATETIME('now','localtime'))
+)
+""")
 try:
     db.execute("ALTER TABLE posts ADD COLUMN likes INTEGER DEFAULT 0;")
 except sqlite3.OperationalError:

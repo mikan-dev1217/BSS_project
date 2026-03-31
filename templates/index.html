@@ -81,8 +81,16 @@
 <title>Echo</title>
 </head>
 <body>
-<div class="header-section">
-<h1>Echo</h1>
+<div class="header-section"style="z-index:200;position:relative;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button onclick="toggleMenu()" style="background:none;color:#444;font-size:1.5em;width:auto;">☰</button><h1>Echo</h1>
+        {% if "user_id" not in session %}
+            <div>
+                <a href="/login">ログイン</a>
+                <a href="/register">登録</a>
+            </div>
+        {% endif %}
+    </div>
 <form action="/search" method="get">
     <input type="text" name="q" placeholder="検索" value="{{ query if query else '' }}">
     <button type="submit">🔍</button>
@@ -93,7 +101,11 @@
     <button type="submit">投稿</button>
 </form>
 </div>
-
+<div id="menu" style="z-index:100;position:fixed;left:-250px;top:0;width:250px;height:100%;background:white;transition:left 0.3s;">
+    <a href="/topic/bukatsu"style="display:block;padding:10px;">部活</a>
+    <a href="/topic/study"style="display:block;padding:10px;">勉強</a>
+    <a href="/topic/zatsudan"style="display:block;padding:10px;">雑談</a>
+</div>
 <div class="main-content">
 <div class="list-container">
     {% if query %}
@@ -122,6 +134,17 @@
     </div>
     {% endif %}
 <hr>
+{% if notices %}
+    {% for n in notices %}
+        {% if n["type"]=="like" %}
+            <a href="/user/{{n['from_user_id']}}">{{n["username"]}}</a>がいいねしました
+        {% elif n["type"]=="comment" %}
+            <a href="/user/{{n['from_user_id']}}">{{n["username"]}}</a>がコメントしました
+        {% elif n["type"]=="dm" %} 
+            <a href="/messages/{{n['from_user_id']}}">{{n["username"]}}</a>からdmが届きました
+        {% endif %} 
+    {% endfor %}
+{% endif %}
 <ul>
 {% for p in posts %}
 <li style="display:block; padding: 15px; border: 1px solid #eee; margin-bottom: 10px;">
@@ -178,14 +201,6 @@
 </ul>
 
 <hr>
-{% if "user_id" not in session %}
-    <a href="/login">ログイン</a>
-    <a href="/register">登録</a>
-{% else %}
-    <form action="/logout" method="post">
-        <button type="submit" style="background-color: #dc3545;">ログアウト</button>
-    </form>
-{% endif %}
 <footer style="color: gray; font-size: 0.9em;">
 producer: wataru shiraishi
 </footer>
@@ -196,5 +211,15 @@ producer: wataru shiraishi
 </div>
 </div>
 </div>
+<script>
+    function toggleMenu() {
+    const menu=document.getElementById("menu")
+    if (menu.style.left==="-250px"){
+        menu.style.left="0px"
+    }else{
+        menu.style.left="-250px"
+    }
+    }
+</script>
 </body>
 </html>

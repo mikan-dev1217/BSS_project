@@ -20,6 +20,14 @@ def home():
             (user_id,)
             ).fetchall()
     liked_posts=[lp[0] for lp in liked_posts]
+    notices=db.execute(
+        "SELECT notices.type,notices.post_id,notices.from_user_id,users.username FROM notices JOIN users ON notices.from_user_id=users.id WHERE notices.user_id=? AND notices.is_read=0 GROUP BY notices.from_user_id ORDER BY notices.created_at DESC",
+        (user_id,)
+    ).fetchall()
+    db.execute(
+        "UPDATE notices SET is_read=1 WHERE user_id=?",
+        (user_id,)
+    )
     posts=db.execute("""
     SELECT posts.id,posts.content,posts.created_at,users.username,posts.user_id,posts.likes
     FROM posts
@@ -38,7 +46,7 @@ def home():
     WHERE receiver_id=?
     """,(user_id,)).fetchall()
     db.close()
-    return render_template("index.html",dm_senders=dm_senders,posts=posts,liked_posts=liked_posts,comments=comments)
+    return render_template("index.html",notices=notices,dm_senders=dm_senders,posts=posts,liked_posts=liked_posts,comments=comments)
 @app.route("/delete/<int:post_id>",methods=["POST"])
 def delete(post_id):
     db=get_db()
@@ -94,6 +102,10 @@ def send_message(user_id):
         "INSERT INTO messages(sender_id,content,receiver_id) VALUES(?,?,?)",
         (sender_id,content,user_id)
     )
+    db.execute(
+        "INSERT INTO notices(user_id,type,from_user_id)VALUES(?,?,?)",
+        (user_id,"dm",sender_id)
+    )
     db.commit()
     db.close()
     return redirect(f"/messages/{user_id}")
@@ -138,6 +150,10 @@ def talking(user_id):
     db.execute(
     "UPDATE messages SET is_read=1 WHERE sender_id=? AND receiver_id=?",
     (user_id, sender_id)
+    )
+    db.execute(
+        "UPDATE notices SET is_read=1 WHERE user_id=? AND from_user_id=? AND type='dm'",
+        (sender_id, user_id)
     )
     db.commit()
     db.close()
@@ -185,9 +201,17 @@ def like(post_id):
             (post_id,)
         )
     if not existing:
+        post=db.execute(
+            "SELECT user_id FROM posts WHERE id=?",
+            (post_id,)
+        ).fetchone()
         db.execute(
             "INSERT INTO likes (user_id,post_id)VALUES (?,?)",
             (user_id,post_id)
+        )
+        db.execute(
+            "INSERT INTO notices(user_id,type,post_id,from_user_id)VALUES(?,?,?,?)",
+            (post["user_id"],"like",post_id,user_id)
         )
         db.execute(
             "UPDATE posts SET likes=likes+1 WHERE id=?",
@@ -203,9 +227,17 @@ def comment(post_id):
     user_id=session["user_id"]
     content=request.form["content"]
     db=get_db()
+    comment=db.execute(
+            "SELECT user_id FROM posts WHERE id=?",
+            (post_id,)
+    ).fetchone()
     db.execute(
         "INSERT INTO comments(post_id,user_id,content)VALUES(?,?,?)",
         (post_id,user_id,content)
+    )
+    db.execute(
+        "INSERT INTO notices(user_id,type,post_id,from_user_id)VALUES(?,?,?,?)",
+        (comment["user_id"],"comment",post_id,user_id)
     )
     db.commit()
     db.close()
