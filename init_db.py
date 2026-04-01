@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS notices(
     created_At TIMESTAMP DEFAULT (DATETIME('now','localtime'))
 )
 """)
+
 try:
     db.execute("ALTER TABLE posts ADD COLUMN likes INTEGER DEFAULT 0;")
 except sqlite3.OperationalError:
@@ -73,7 +74,10 @@ try:
     db.execute("ALTER TABLE comments ADD COLUMN likes INTEGER DEFAULT 0;")
 except sqlite3.OperationalError:
     print("commentsテーブルにlikesカラムはすでにあるのでスキップしました")
-
+try:
+    db.execute("ALTER TABLE posts ADD COLUMN topic TEXT DEFAULT 'general'")
+except sqlite3.OperationalError:
+    print("postsテーブルにtopicカラムはすでにあるのでスキップしました")
 try:
     db.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER DEFAULT 0;")
 except sqlite3.OperationalError:

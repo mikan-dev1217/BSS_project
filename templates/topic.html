@@ -90,12 +90,12 @@
     padding: 0 5px;
     }
 </style>
-<title>Echo</title>
+<title>{{topic_label}}</title>
 </head>
 <body>
 <div class="header-section"style="z-index:100;position:relative;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <button onclick="toggleMenu()" style="background:none;color:#444;font-size:1.5em;width:auto;"><strong>☰</strong></button><h1>Echo</h1>
+        <button onclick="toggleMenu()" style="background:none;color:#444;font-size:1.5em;width:auto;"><strong>☰</strong></button><h1>{{topic_label}}</h1>
         {% if "user_id" not in session %}
             <div>
                 <a href="/login">ログイン</a>
@@ -108,7 +108,7 @@
     <button type="submit">🔍</button>
 </form>
 <hr>
-<form action="/post/general" method="post">
+<form action="/post/{{topic_name}}" method="post">
     <input type="text" name="content" placeholder="書き込み" required>
     <button type="submit">投稿</button>
 </form>
@@ -121,43 +121,7 @@
 </div>
 <div class="main-content">
 <div class="list-container">
-    {% if query %}
-    <div style="display:flex; justify-content:space-between;">
-        <h3 style="color: #444;">「{{ query }}」の検索結果</h3>
-        <a href="/">×</a>
-    </div>
-        <hr>
-        <h4 style="color: #666;">ユーザー</h4>
-        {% for u in users %}
-            <div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 5px;">
-                <a href="/user/{{ u['id'] }}">{{ u['username'] }}</a>
-            </div>
-        {% else %}
-            <p style="color: gray;">ユーザーが見つかりませんでした</p>
-        {% endfor %}
-    
-        <h4 style="color: #666;">投稿</h4>
-        {% for p in search_posts %}
-            <div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 5px;">
-                <a href="/user/{{ p['user_id'] }}"><strong>{{ p['username'] }}</strong></a>: {{ p['content'] }}
-            </div>
-        {% else %}
-            <p style="color: gray;">投稿が見つかりませんでした</p>
-        {% endfor %}
-    </div>
-    {% endif %}
 <hr>
-{% if notices %}
-    {% for n in notices %}
-        {% if n["type"]=="like" %}
-            <a href="/user/{{n['from_user_id']}}">{{n["username"]}}</a>がいいねしました
-        {% elif n["type"]=="comment" %}
-            <a href="/user/{{n['from_user_id']}}">{{n["username"]}}</a>がコメントしました
-        {% elif n["type"]=="dm" %} 
-            <a href="/messages/{{n['from_user_id']}}">{{n["username"]}}</a>からdmが届きました
-        {% endif %} 
-    {% endfor %}
-{% endif %}
 <ul>
 {% for p in posts %}
 <li style="display:block; padding: 15px; border: 1px solid #eee; margin-bottom: 10px;">

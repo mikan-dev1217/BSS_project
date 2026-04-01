@@ -48,6 +48,39 @@ def home():
     """,(user_id,)).fetchall()
     db.close()
     return render_template("index.html",notices=notices,dm_senders=dm_senders,posts=posts,liked_posts=liked_posts,comments=comments)
+@app.route("/topic/<topic_name>")
+def topic(topic_name):
+    user_id=session.get("user_id")
+    if not "user_id" in session:
+        return redirect("/login")
+    db=get_db()
+    liked_posts=[]
+    if user_id:
+        liked_posts=db.execute(
+            "SELECT post_id FROM likes WHERE user_id=?",
+            (user_id,)
+            ).fetchall()
+    liked_posts=[lp[0] for lp in liked_posts]
+    topic_names = {
+        "bukatsu": "部活",
+        "study": "勉強",
+        "zatsudan": "雑談"
+    }
+    topic_label = topic_names.get(topic_name, topic_name)
+    posts=db.execute("""
+    SELECT posts.id,posts.content,posts.created_at,users.username,posts.user_id,posts.likes
+    FROM posts
+    JOIN users ON posts.user_id=users.id
+    WHERE posts.topic=?
+    ORDER BY posts.created_at DESC
+    """,(topic_name,)).fetchall()
+    comments=db.execute("""
+    SELECT comments.post_id,comments.content,users.username,users.id
+    FROM comments
+    JOIN users ON comments.user_id=users.id
+    """).fetchall()
+    db.close()
+    return render_template("topic.html",topic_name=topic_name,liked_posts=liked_posts,posts=posts,comments=comments,topic_label=topic_label)
 @app.route("/delete/<int:post_id>",methods=["POST"])
 def delete(post_id):
     db=get_db()
@@ -57,7 +90,7 @@ def delete(post_id):
     )
     db.commit()
     db.close()
-    return redirect("/")
+    return redirect(request.referrer or "/")
 @app.route("/register",methods=["GET","POST"])
 def register():
     if request.method=="POST":
@@ -220,7 +253,7 @@ def like(post_id):
         )
     db.commit()
     db.close()
-    return redirect("/")
+    return redirect(request.referrer or "/")
 @app.route("/comment/<int:post_id>",methods=["POST"])
 def comment(post_id):
     if "user_id" not in session:
@@ -242,7 +275,7 @@ def comment(post_id):
     )
     db.commit()
     db.close()
-    return redirect("/")
+    return redirect(request.referrer or "/")
 @app.route("/unfollow/<int:user_id>",methods=["POST"])
 def unfollow(user_id):
     if "user_id" not in session:
@@ -347,17 +380,17 @@ def search():
     db.close()
     return render_template("index.html",posts=posts,liked_posts=liked_posts,
     comments=comments,users=users,search_posts=search_posts,query=query)
-@app.route("/post",methods=["POST"])
-def post():
+@app.route("/post/<topic_name>",methods=["POST"])
+def post(topic_name):
     if "user_id" not in session:
         return redirect("/register")
     text=request.form["content"]
     db=get_db()
     db.execute(
-        "INSERT INTO posts(content,user_id)VALUES(?,?)",
-        (text,session["user_id"])
+        "INSERT INTO posts(topic,content,user_id)VALUES(?,?,?)",
+        (topic_name,text,session["user_id"])
     )
     db.commit()
     db.close()
-    return redirect("/")
+    return redirect(f"/topic/{topic_name}")
 app.run(debug=True)
