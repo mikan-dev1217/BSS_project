@@ -2,8 +2,11 @@ from flask import Flask,render_template,request,redirect,session
 from werkzeug.security import generate_password_hash,check_password_hash 
 import sqlite3
 import os
+import random
+import string
 app=Flask(__name__)
-app.secret_key="secret"
+import os
+app.secret_key = os.environ.get("SECRET_KEY", "6ae6249e2d7f94a97ab5c3aceeee2af7998f48619bad010a")
 def get_db():
     db=sqlite3.connect("database.db")
     db.row_factory=sqlite3.Row
@@ -12,7 +15,7 @@ def get_db():
 def home():
     user_id=session.get("user_id")
     if not "user_id" in session:
-        return redirect("/login")
+        return redirect("/register")
     db=get_db()
     liked_posts=[]
     if user_id:
@@ -49,6 +52,59 @@ def home():
     """,(user_id,)).fetchall()
     db.close()
     return render_template("index.html",notices=notices,dm_senders=dm_senders,posts=posts,liked_posts=liked_posts,comments=comments)
+@app.route("/admin")
+def admin():
+    if "user_id" not in session:
+        return redirect("/login")
+    db=get_db()
+    user=db.execute(
+        "SELECT is_admin FROM users WHERE id=?",
+        (session["user_id"],)
+    ).fetchone()
+    if not user or user["is_admin"] != 1:
+        return "アクセス権限がありません"
+    query=request.args.get("q","")
+    users=db.execute(
+        "SELECT id,username,realname,is_admin FROM users WHERE realname LIKE ?",
+        (f"%{query}%",)
+    ).fetchall()
+    codes=db.execute("SELECT * FROM invite_codes").fetchall()
+    db.close()
+    return render_template("admin.html",users=users,codes=codes)
+@app.route("/admin/delete_user/<int:user_id>", methods=["POST"])
+def delete_user(user_id):
+    if "user_id" not in session:
+        return redirect("/login")
+    db=get_db()
+    user=db.execute(
+        "SELECT is_admin FROM users WHERE id=?",
+        (session["user_id"],)
+    ).fetchone()
+    if not user or user["is_admin"] != 1:
+        return "アクセス権限がありません"
+    db.execute(
+        "DELETE FROM users WHERE id=?",
+        (user_id,)
+    )
+    db.commit()
+    db.close()
+    return redirect("/admin")
+@app.route("/admin/create_code",methods=["POST"])
+def create_code():
+    if "user_id" not in session:
+        return redirect("/login")
+    db=get_db()
+    user=db.execute(
+        "SELECT is_admin FROM users WHERE id=?",
+        (session["user_id"],)
+    ).fetchone()
+    if not user or user["is_admin"] != 1:
+        return "アクセス権限がありません"
+    code=''.join(random.choices(string.ascii_uppercase+string.digits,k=8))
+    db.execute("INSERT INTO invite_codes(code) VALUES(?)",(code,))
+    db.commit()
+    db.close()
+    return redirect("/admin")
 @app.route("/topic/<topic_name>")
 def topic(topic_name):
     user_id=session.get("user_id")
@@ -62,11 +118,12 @@ def topic(topic_name):
             (user_id,)
             ).fetchall()
     liked_posts=[lp[0] for lp in liked_posts]
-    topic_names = {
+    topic_names ={
         "bukatsu": "部活",
         "study": "勉強",
-        "zatsudan": "雑談"
-    }
+        "zatsudan": "雑談",
+        "general" : "Echo" 
+    }   
     topic_label = topic_names.get(topic_name, topic_name)
     posts=db.execute("""
     SELECT posts.id,posts.content,posts.created_at,users.username,posts.user_id,posts.likes
@@ -98,7 +155,14 @@ def register():
         username=request.form["username"]
         password=request.form["password"]
         realname=request.form["realname"]
+        invite_code=request.form["invite_code"]
         db=get_db()
+        code=db.execute(
+            "SELECT * FROM invite_codes WHERE code=? AND is_used=0",
+            (invite_code,)
+        ).fetchone()
+        if not code:
+            return "招待コードが無効です"
         user=db.execute(
             "SELECT * FROM users WHERE username=?",
             (username,)
@@ -117,6 +181,8 @@ def register():
 def follow(user_id):
     if "user_id" not in session:
         return redirect ("/register")
+    if session['user_id'] == user_id:
+        return redirect("/")
     me=session["user_id"]
     db=get_db()
     db.execute(
@@ -212,8 +278,6 @@ def login():
     return render_template("login.html")
 @app.route("/logout",methods=["POST"])
 def logout():
-    db=get_db()
-    user_id=session["user_id"]
     session.clear()
     return render_template("logouted.html")
 @app.route("/like/<int:post_id>",methods=["POST"])
@@ -281,6 +345,8 @@ def comment(post_id):
 def unfollow(user_id):
     if "user_id" not in session:
         return redirect("/register")
+    if session['user_id'] == user_id:
+        return redirect("/")
     me=session["user_id"]
     db=get_db()
     db.execute(
@@ -395,6 +461,12 @@ def post(topic_name):
         return redirect("/register")
     text=request.form["content"]
     db=get_db()
+    ngwords=db.execute("""
+        SELECT word,id
+        FROM ng_words
+    """).fetchall()
+    for n in ngwords:
+        text = text.replace(n["word"], "***")
     db.execute(
         "INSERT INTO posts(topic,content,user_id)VALUES(?,?,?)",
         (topic_name,text,session["user_id"])

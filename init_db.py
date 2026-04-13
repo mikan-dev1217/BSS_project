@@ -9,7 +9,14 @@ CREATE TABLE IF NOT EXISTS users(
     realname TEXT
 )
 """)
-
+db.execute("""
+CREATE TABLE IF NOT EXISTS invite_codes(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE,
+    is_used INTEGER DEFAULT 0,
+    used_by INTEGER
+)
+""")
 db.execute("""
 CREATE TABLE IF NOT EXISTS posts(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,7 +25,12 @@ CREATE TABLE IF NOT EXISTS posts(
     created_at TIMESTAMP DEFAULT (DATETIME('now','localtime'))
 )
 """)
-
+db.execute("""
+CREATE TABLE IF NOT EXISTS ng_words(
+           id INTEGEr PRIMARY KEY AUTOINCREMENT,
+           word TEXT
+)
+""")
 db.execute("""
 CREATE TABLE IF NOT EXISTS comments(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,6 +94,10 @@ try:
     db.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER DEFAULT 0;")
 except sqlite3.OperationalError:
     print("messagesテーブルにis_readカラムはすでにあるのでスキップしました")
+try:
+    db.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0;")
+except sqlite3.OperationalError:
+    print("すでにあるのでスキップ")
 try:
     db.execute("ALTER TABLE users ADD COLUMN icon TEXT;")
 except sqlite3.OperationalError:

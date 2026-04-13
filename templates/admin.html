@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body {
+        background-color: #e4dce8;
+        font-family: sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    .header-section {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px 20px 20px;
+    }
+    h1 {
+        color: #444;
+        font-size: 2.5em;
+        margin: 0 0 20px 0;
+    }
+    input[type="text"] {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 70%;
+        outline: none;
+    }
+    .main-content {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    .list-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    ul {
+        padding: 0;
+        margin: 0;
+    }
+    li {
+        background-color: white;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        list-style: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        display:block;
+        justify-content:space-between;
+        align-items:center;
+    }
+    button {
+        background-color: #1a73e8;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #1557b0;
+    }
+    .comments {
+    position: relative;
+    border-top: 1px solid #ddd;
+    margin-top: 15px;
+    padding-top: 15px;
+    }
+    .menu-link{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:15px 20px;
+    font-size:1.1em;
+    color:#333;
+    text-decoration:none;
+    border-radius:30px;
+    }
+    .menu-link:hover{
+    background-color: #f0f0f0;
+    }
+    .comment-label {
+    position: absolute;
+    right: 10px;
+    top: -10px;
+    background: #f8f9fa;
+    font-size: 0.8em;
+    color: #555;
+    padding: 0 5px;
+    }
+</style>
+<title>Echo 管理者モード</title>
+</head>
+<body>
+<div style="max-width:600px; margin:0 auto; padding:20px;">
+    <h1 style="text-align: center;">Echo 管理者モード</h1>
+    <hr>
+    <form action="/admin" method="get">
+        <input type="text" name="q" placeholder="本名検索">
+        <button type="submit">検索</button>
+    </form>
+    <hr>
+    {% for u in users %}
+        <div style="background:white; border-radius:8px; padding:15px; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span>{{ u["username"] }} - {{ u["realname"] }}</span>
+                <form action="/admin/delete_user/{{u['id']}}" method="post">
+                    <button style="background-color:red;" type="submit">BAN</button>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+    <hr>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <form action="/admin/create_code" method="post">
+            <button type="submit">招待コードを発行</button>
+        </form>
+        <form action="/" method="get">
+                    <button>戻る</button>
+        </form>
+    </div>
+    <hr>
+    {% for code in codes %}
+        <li>{{ code["code"] }} - {% if code["is_used"] %}使用済み{% else %}未使用{% endif %}</li>
+    {% endfor %}
+    <div style="position:fixed;left:0; bottom:0; width:100%; background:black; color:white;border-top:1px solid #ddd; display:flex; justify-content:space-around; padding:20px;">
+        <a href="/"style="color:white;">🏠</a>
+        <a href="/messages"style="color:white;">✉️</a>
+        <a href="/user/{{ session['user_id'] }}"style="color:white;">👤</a>
+    </div>
+</div>
+</body>

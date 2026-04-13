@@ -79,7 +79,18 @@
             style="cursor:pointer;">
     {% else %} 
         <div onclick="document.getElementById('icon-input').click()"
-            style="cursor:pointer;">
+            style="
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                color:white;
+                font-size:2em;
+                background-color:#acc1dd;
+                width:80px;
+                height:80px;
+                border-radius:50%;
+                cursor:pointer;
+            ">
             {{user["username"][0]}}
         </div>
     {% endif %}
